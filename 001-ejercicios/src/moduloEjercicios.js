@@ -22,9 +22,16 @@ import basededatos from './basededatos';
  * @param {nombreAlumno} nombreAlumno
  */
 export const materiasAprobadasByNombreAlumno = (nombreAlumno) => {
-  // Ejemplo de como accedo a datos dentro de la base de datos
-  // console.log(basededatos.alumnos);
-  return [];
+   let alumno = basededatos.alumnos.filter( alumno => alumno.nombre === nombreAlumno);
+   let materiasAprobadas = undefined;
+   let calificacionesAprobadas;
+
+   if(alumno.length != 0){
+    calificacionesAprobadas = basededatos.calificaciones.filter( calificacion => calificacion.alumno === alumno[0].id && calificacion.nota >= 4);
+    if(calificacionesAprobadas.length != 0) materiasAprobadas = basededatos.materias.filter( materia => materia.id === calificacionesAprobadas[0].materia);
+    else materiasAprobadas = [];
+   }
+   return materiasAprobadas;
 };
 
 /**
@@ -69,7 +76,33 @@ export const materiasAprobadasByNombreAlumno = (nombreAlumno) => {
  * @param {string} nombreUniversidad
  */
 export const expandirInfoUniversidadByNombre = (nombreUniversidad) => {
-  return {};
+   let universidad = basededatos.universidades.filter( universidad => universidad.nombre === nombreUniversidad);
+   let idProfesores = [];
+   let idMaterias = [];
+   let idAlumnos = [];
+   let calificaciones;
+
+   if(universidad.length != 0){
+    universidad.materias = basededatos.materias.filter( materia => materia.universidad === universidad[0].id);
+
+    for(let materia of universidad.materias){
+      idProfesores.push(...materia.profesores);//acumulo los ids, no importa que se dupliquen
+      idMaterias.push(materia.id);
+    }
+
+    universidad.profesores = basededatos.profesores.filter( profesor => idProfesores.includes(profesor.id));
+    calificaciones = basededatos.calificaciones.filter( calificacion => idMaterias.includes(calificacion.materia));
+
+    for(let calificacion of calificaciones){
+      idAlumnos.push(calificacion.alumno);//acumulo los ids, no importa que se dupliquen
+    }
+    
+    universidad.alumnos = basededatos.alumnos.filter( alumno => idAlumnos.includes(alumno.id));
+
+   }else{
+     universidad = undefined;
+   }
+   return universidad;
 };
 
 // /**
